@@ -1,21 +1,17 @@
 cmake_minimum_required(VERSION 3.16)
 project(idnav)
 
+include(FetchContent)
+
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3 -pthread")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -pthread")
 set(CMAKE_BUILD_TYPE "Release")
 
-find_package(catkin COMPONENTS roscpp)
-include_directories(${catkin_INCLUDE_DIRS})
-
-catkin_package(
-   INCLUDE_DIRS include
-   LIBRARIES ${PROJECT_NAME}
-   CATKIN_DEPENDS roscpp
-   DEPENDS eigen opencv)
-
 # Eigen
-find_package( Eigen3 REQUIRED )
+find_package(Eigen3 REQUIRED NO_MODULE)
 message(STATUS "Eigen3_DIR: ${Eigen3_DIR}")
 
 # OpenCV
@@ -30,13 +26,24 @@ if( OpenCV_FOUND )
 endif()
 
 # Pangolin
+set(Pangolin_DIR /home/tom/Documents/PhD/unseen_slam/Thirdparty/Pangolin/build)
 find_package(Pangolin REQUIRED)
 message(STATUS "Pangolin_INCLUDE_DIRS: ${Pangolin_INCLUDE_DIRS}")
 message(STATUS "Pangolin_LIBRARIES: ${Pangolin_LIBRARIES}")
 
 # Ceres
-find_package( Ceres REQUIRED )
-message(STATUS "Ceres_DIR: ${Ceres_DIR}")
+set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/Thirdparty/_deps)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+set(CUDA OFF CACHE BOOL "" FORCE)
+set(MINIGLOG ON CACHE BOOL "" FORCE)
+FetchContent_Declare(
+        ceres
+        GIT_REPOSITORY https://github.com/ceres-solver/ceres-solver.git
+        GIT_TAG 2.1.0
+        GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(ceres)
 
 # Visual LCD
 add_subdirectory(${PROJECT_SOURCE_DIR}/Thirdparty/visual-lcd)
@@ -87,11 +94,20 @@ add_library(${PROJECT_NAME} SHARED
         classes/FrontEnd/loopClosure.cpp
         classes/Optimizer/DepthOptimizer.cpp)
 
+target_include_directories(${PROJECT_NAME}
+        PUBLIC
+        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/utils
+        ${PROJECT_SOURCE_DIR}/Thirdparty/visual-lcd/include
+        ${PROJECT_SOURCE_DIR}/Thirdparty/fast_akaze
+        ${OpenCV_INCLUDE_DIRS}
+        ${Pangolin_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIR})
 
     target_link_libraries(${PROJECT_NAME}
         ${OpenCV_LIBS}
         ${Pangolin_LIBRARIES}
-        ${CERES_LIBRARIES}
+        Ceres::ceres
         akaze
         LCDetector
 )

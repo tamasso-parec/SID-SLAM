@@ -1,0 +1,6 @@
+Examples/RGB-D/ETH/rgbdETH
+Examples/RGB-D/MT/rgbdMT
+Examples/RGB-D/NUIM/rgbdNUIM
+Examples/RGB-D/TUM/rgbdTUM
+Thirdparty/_deps/
+build/
