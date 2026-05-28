@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
     std::string systemSettings_yamlFile = std::string(argv[2]);
     std::string sequenceSettings_yamlFile_path = sDirectory + "/sequenceSettings.yaml";
     std::string datasetFolder = sDirectory.substr(0, sDirectory.find_last_of('/'));
+    if(argc > 5) datasetFolder = argv[5];
 
     int experimentID{0};
     if(argc > 3) experimentID = stoi(argv[3]);

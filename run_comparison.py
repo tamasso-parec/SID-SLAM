@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import argparse
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
+import shutil
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,48 +37,22 @@ def camera_yaml(algorithm_dir: Path, dataset_name: str) -> Path:
     return cameras_dir / "freiburg1.yaml"
 
 
-def symlink_or_copy(source: Path, destination: Path) -> None:
-    if destination.exists() or destination.is_symlink():
-        return
-    try:
-        destination.symlink_to(source, target_is_directory=source.is_dir())
-    except OSError:
-        if source.is_dir():
-            shutil.copytree(source, destination)
-        else:
-            shutil.copy2(source, destination)
-
-
 def write_system_settings(source: Path, destination: Path) -> None:
     text = source.read_text(encoding="utf-8")
     text = text.replace("visualization: 1", "visualization: 0")
     destination.write_text(text, encoding="utf-8")
 
 
-def write_clean_groundtruth(source: Path, destination: Path) -> None:
-    with source.open("r", encoding="utf-8") as src, destination.open("w", encoding="utf-8") as dst:
-        for line in src:
-            stripped = line.strip()
-            if stripped and not stripped.startswith("#"):
-                dst.write(stripped + "\n")
-
-
 def prepare_sequence(args: argparse.Namespace) -> Path:
     dataset = args.dataset.resolve()
     output = args.output.resolve()
-    sequence_dir = output / "sequence" / dataset.name
+    sequence_dir = output / "sequence_config"
     sequence_dir.mkdir(parents=True, exist_ok=True)
 
     required = ["rgb", "depth", "rgb.txt", "depth.txt", "associations.txt", "groundtruth.txt"]
     missing = [name for name in required if not (dataset / name).exists()]
     if missing:
         raise SystemExit(f"Dataset is missing SID-SLAM TUM inputs: {', '.join(missing)}")
-
-    for name in required:
-        if name == "groundtruth.txt":
-            write_clean_groundtruth(dataset / name, sequence_dir / name)
-            continue
-        symlink_or_copy(dataset / name, sequence_dir / name)
 
     camera = camera_yaml(args.algorithm_dir.resolve(), dataset.name).resolve()
     if not camera.is_file():
@@ -117,7 +91,15 @@ def main() -> int:
 
     sequence_dir = prepare_sequence(args)
     system_settings = output / "systemSettings.headless.yaml"
-    command = [str(executable), str(sequence_dir), str(system_settings), "0", str(output)]
+    dataset_root = args.dataset.resolve().parent
+    command = [
+        str(executable),
+        str(sequence_dir),
+        str(system_settings),
+        "0",
+        str(output),
+        str(dataset_root),
+    ]
     (output / "command.txt").write_text(" ".join(command) + "\n", encoding="utf-8")
 
     if args.dry_run:

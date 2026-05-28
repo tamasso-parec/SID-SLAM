@@ -160,6 +160,7 @@ void IDNav::SequenceSettings::loadGroundtruth(int headerTxtFilesSize){
             vec7 gt;
             size_t frameId{0};
             for (vector<string> &line: groundtruthFile) {
+                if(line.size() < 8 || line[0].empty() || line[0][0] == '#') continue;
                 gt(0) = stod(line[1]);
                 gt(1) = stod(line[2]);
                 gt(2) = stod(line[3]);
