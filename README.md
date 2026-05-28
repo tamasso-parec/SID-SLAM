@@ -1,4 +1,15 @@
 # SID-SLAM
+
+## Run Comparison
+
+bash```
+python3 comparisons/SID-SLAM/run_comparison.py \
+  --dataset datasets/rgbd_dataset_freiburg2_pioneer_slam \
+  --output /tmp/sid_slam_run \
+  --repo-root "$PWD" \
+  --algorithm-dir comparisons/SID-SLAM \
+  --run-root /tmp/sid_slam_run
+```
 Implements SID-SLAM: Semi-Direct Information-Driven RGB-D SLAM
 
 Reference:

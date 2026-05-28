@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     std::cout << BOLDMAGENTA_COUT <<  "\nInitialize SID_SLAM in TUM sequence ..." << RESET_COUT << std::endl;
     std::string systemSettings_yamlFile = std::string(argv[2]);
     std::string sequenceSettings_yamlFile_path = sDirectory + "/sequenceSettings.yaml";
-    std::string datasetFolder = "/home_local/giub_ri/TUM-RGBD";
+    std::string datasetFolder = sDirectory.substr(0, sDirectory.find_last_of('/'));
 
     int experimentID{0};
     if(argc > 3) experimentID = stoi(argv[3]);

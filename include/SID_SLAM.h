@@ -51,13 +51,15 @@ namespace IDNav{
             seqSet.RGB_seconds = camera->get_RGB_frequence_secs();
             seqSet.depth_hz = camera->get_depth_frequence_hz();
             cout << "depthConstant    : " << seqSet.depthConstant   << " (m/unit) "<<endl;
-            visualizer.reset(new Visualizer{&seqSet});
-            visualizer->mapVisualizer->image_w = camera->get_w();
-            visualizer->mapVisualizer->image_h = camera->get_h();
-            visualizer->mapVisualizer->saveSequence = sysSet.saveSequence;
-            visualizer->mapVisualizer->maxInformationLoss =  sysSet.maxInformationLoss;
-            visualizer->mapVisualizer->maxKeyframeDistance =  sysSet.maxKeyframeDistance;
-            visualizer->mapVisualizer->groundtruth = &groundtruth;
+            if(sysSet.visualization){
+                visualizer.reset(new Visualizer{&seqSet});
+                visualizer->mapVisualizer->image_w = camera->get_w();
+                visualizer->mapVisualizer->image_h = camera->get_h();
+                visualizer->mapVisualizer->saveSequence = sysSet.saveSequence;
+                visualizer->mapVisualizer->maxInformationLoss =  sysSet.maxInformationLoss;
+                visualizer->mapVisualizer->maxKeyframeDistance =  sysSet.maxKeyframeDistance;
+                visualizer->mapVisualizer->groundtruth = &groundtruth;
+            }
 
             trackingFrontEnd = std::make_unique<TrackingFrontEnd>(&keyframes,&seqSet, cameraTracking, cameraWindowOptimization);
 
@@ -199,7 +201,9 @@ namespace IDNav{
             backEnd = std::make_unique<BackEnd>();
             poseGraphOptimizer = std::make_unique<PoseGraphOptimizer>();
 
-            visualizer->mapVisualizer->trajectory.clear();
+            if(sysSet.visualization){
+                visualizer->mapVisualizer->trajectory.clear();
+            }
 
             initializedSystem = false;
             resetSystem = false;

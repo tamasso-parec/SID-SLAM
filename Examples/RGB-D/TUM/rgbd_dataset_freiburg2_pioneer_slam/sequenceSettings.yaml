@@ -1,0 +1,10 @@
+%YAML:1.0 
+
+sequenceSettings:
+   sequenceName: rgbd_dataset_freiburg2_pioneer_slam
+   cameraYAML: camerasTUM/freiburg2.yaml
+
+RGBD_TUM_dataset:
+   numRGB: 2921 
+   numDepth: 2890 
+   associationsTxt: rgbd_dataset_freiburg2_pioneer_slam/associations.txt
