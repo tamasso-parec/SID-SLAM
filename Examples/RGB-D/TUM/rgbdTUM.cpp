@@ -1,10 +1,12 @@
 #include "../../../include/SID_SLAM.h"
+#include <cstdlib>
 #include <experimental/filesystem>
 #include <memory>
 
 namespace IDNav{
     void getRGBAndDepthImage(Mat& rgbImg_, dataType& grayImgTs ,Mat& depthImg ,dataType& validDepth,Mat& maskImg,IDNav::SID_SLAM* idSlam, const size_t& id);
     void sidSlamTracking(IDNav::SID_SLAM* sidSlam_);
+    int maxRelocalizationFrames();
 }
 
 int main(int argc, char** argv) {
@@ -74,7 +76,19 @@ int main(int argc, char** argv) {
     sidSlam.trackingFrontEnd->windowOptimizer->optimizeProfiler.showProfile();
     sidSlam.seqSet.closeLogFiles();
 
+    if(sidSlam.abortedDueToRelocalization){
+        return 2;
+    }
+
     return 0;
+}
+
+int IDNav::maxRelocalizationFrames(){
+    const char* envValue = std::getenv("SID_SLAM_MAX_RELOCALIZATION_FRAMES");
+    if(!envValue) return 30;
+
+    int value = std::atoi(envValue);
+    return value;
 }
 
 void IDNav::getRGBAndDepthImage(Mat& rgbImg_, dataType& grayImgTs ,Mat& depthImg ,dataType& validDepth, Mat& maskImg, IDNav::SID_SLAM* idSlam, const size_t& id){
@@ -97,9 +111,27 @@ void IDNav::sidSlamTracking(IDNav::SID_SLAM* sidSlam_){
     IDNav::dataType grayImgTs{};
     IDNav::dataType validDepth{};
     Mat maskImg{};
+    int consecutiveRelocalizationFrames{0};
+    const int maxConsecutiveRelocalizationFrames = IDNav::maxRelocalizationFrames();
+
     for (size_t trFrame_id = 0 ; trFrame_id < sidSlam_->seqSet.numRGB; ++trFrame_id){
         getRGBAndDepthImage(rgbImg,grayImgTs,depthImg,validDepth,maskImg, sidSlam_, trFrame_id);
         sidSlam_->processImage(rgbImg,grayImgTs,depthImg, validDepth,trFrame_id,maskImg);
+
+        if(sidSlam_->trackingFrontEnd->relocalizationMode){
+            ++consecutiveRelocalizationFrames;
+            if(maxConsecutiveRelocalizationFrames > 0 &&
+               consecutiveRelocalizationFrames >= maxConsecutiveRelocalizationFrames){
+                cout << LIGTH_RED_COUT
+                     << "SID-SLAM aborting: relocalization mode persisted for "
+                     << consecutiveRelocalizationFrames << " frames."
+                     << RESET_COUT << endl;
+                sidSlam_->abortedDueToRelocalization = true;
+                break;
+            }
+        }else{
+            consecutiveRelocalizationFrames = 0;
+        }
     }
 
     sidSlam_->killSystem = true;

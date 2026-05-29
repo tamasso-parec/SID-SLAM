@@ -25,6 +25,7 @@ namespace IDNav{
         bool initializedSystem{false};
         bool resetSystem{false};
         bool killSystem{false};
+        bool abortedDueToRelocalization{false};
         bool rosActive{false};
 
         SequenceSettings seqSet{};
