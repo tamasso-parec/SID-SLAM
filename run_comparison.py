@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -107,14 +108,33 @@ def main() -> int:
         return 0
 
     with (output / "run.log").open("w", encoding="utf-8") as log:
-        proc = subprocess.run(command, cwd=algorithm_dir, stdout=log, stderr=subprocess.STDOUT)
+        env = os.environ.copy()
+        env["SID_SLAM_SKIP_WAITS"] = "1"
+        proc = subprocess.Popen(
+            command,
+            cwd=algorithm_dir,
+            env=env,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        try:
+            return_code = proc.wait()
+        except KeyboardInterrupt:
+            os.killpg(proc.pid, signal.SIGTERM)
+            try:
+                return_code = proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                os.killpg(proc.pid, signal.SIGKILL)
+                return_code = proc.wait()
+            raise
 
     produced = output / "00000_CameraTrajectory.txt"
     canonical = output / "CameraTrajectory.txt"
     if produced.is_file() and produced.stat().st_size > 0:
         shutil.copy2(produced, canonical)
 
-    return proc.returncode
+    return return_code
 
 
 if __name__ == "__main__":

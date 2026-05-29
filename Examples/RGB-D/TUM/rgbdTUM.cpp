@@ -102,6 +102,10 @@ void IDNav::sidSlamTracking(IDNav::SID_SLAM* sidSlam_){
         sidSlam_->processImage(rgbImg,grayImgTs,depthImg, validDepth,trFrame_id,maskImg);
     }
 
+    sidSlam_->killSystem = true;
+    sidSlam_->trackingFrontEnd->stopWindowOptimization = true;
+    sidSlam_->trackingFrontEnd->newWindowToOptimize = true;
+
     /*idSlam_->trackingFrontEnd->globalOptimizer->resetOptimization();
    idSlam_->trackingFrontEnd->globalOptimizer->prepareOptimization(idSlam_->keyframes,"iterativeOptimization");
    idSlam_->trackingFrontEnd->globalOptimizer->optimize(10);

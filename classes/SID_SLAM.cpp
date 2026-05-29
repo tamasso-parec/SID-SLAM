@@ -93,7 +93,7 @@ void IDNav::SID_SLAM::processImage(Mat& rgbImg_, dataType& grayImgTs_,
     std::chrono::high_resolution_clock::time_point t1{},t2{};
     std::chrono::duration<float, std::milli> timeLastExecution{};
     int incT;
-    double t_1;
+    static double previousTimestamp = grayImgTs_;
 
     if(initializedSystem){
         t1 = std::chrono::high_resolution_clock::now();
@@ -114,11 +114,11 @@ void IDNav::SID_SLAM::processImage(Mat& rgbImg_, dataType& grayImgTs_,
 #ifdef ONLINE_WINDOW_OPTIMIZATION
         t2 = std::chrono::high_resolution_clock::now();
         timeLastExecution = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);
-        incT = (int) (grayImgTs_ - t_1)*1000.0 - (timeLastExecution.count());
+        incT = static_cast<int>((grayImgTs_ - previousTimestamp) * 1000.0 - timeLastExecution.count());
         if((incT > 0)&&(!rosActive)){
             usleep(incT);
         }
-        t_1 = grayImgTs_;
+        previousTimestamp = grayImgTs_;
 #endif
         if(resetSystem){
             reset();
@@ -126,7 +126,7 @@ void IDNav::SID_SLAM::processImage(Mat& rgbImg_, dataType& grayImgTs_,
     }
     else{
         initialize(rgbImg_,grayImgTs_,depthImg_,validDepth_, trFrame_id_,maskImg_);
-        t_1 = grayImgTs_;
+        previousTimestamp = grayImgTs_;
     }
 }
 
